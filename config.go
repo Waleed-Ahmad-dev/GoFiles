@@ -1,23 +1,58 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"time"
 )
 
-// Config
+// Global Config
 const RootFolder = "."
 const TrashFolder = ".trash"
 const TrashRetention = 30 * 24 * time.Hour
+const ConfigFileName = "gofiles.json"
 
-// Auth Config (Defaults, but should be changed via Environment Variables)
-var AdminUser = getEnv("GOFILES_USER", "admin")
-var AdminPass = getEnv("GOFILES_PASS", "admin123")
+// Runtime State
+var AppConfig ConfigFile
+var IsConfigured = false
 
-// Helper to get env variables
-func getEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
+// InitConfig tries to load gofiles.json
+func InitConfig() {
+	file, err := os.Open(ConfigFileName)
+	if err != nil {
+		// File doesn't exist? That means we need Setup!
+		IsConfigured = false
+		return
 	}
-	return fallback
+	defer file.Close()
+
+	// File exists? Load credentials
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&AppConfig)
+	if err != nil {
+		// If JSON is broken, force setup
+		IsConfigured = false
+		return
+	}
+
+	IsConfigured = true
+}
+
+// SaveConfig writes the credentials to disk
+func SaveConfig(username, password string) error {
+	AppConfig = ConfigFile{
+		Username:  username,
+		Password:  password,
+		CreatedAt: time.Now(),
+	}
+
+	file, err := os.Create(ConfigFileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(AppConfig)
 }
