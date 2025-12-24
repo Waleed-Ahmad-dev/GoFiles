@@ -31,9 +31,10 @@ func main() {
 	// Read & Search
 	http.HandleFunc("/api/files", AuthMiddleware(handleListFiles))
 	http.HandleFunc("/api/download", AuthMiddleware(handleDownloadFile))
+	http.HandleFunc("/api/download-zip", AuthMiddleware(handleDownloadZip)) // NEW: Stream Zip
 	http.HandleFunc("/api/search", AuthMiddleware(handleSearch))
 
-	// Zip / Unzip (NEW)
+	// Zip / Unzip
 	http.HandleFunc("/api/zip", AuthMiddleware(handleZip))
 	http.HandleFunc("/api/unzip", AuthMiddleware(handleUnzip))
 
@@ -44,6 +45,7 @@ func main() {
 
 	// Write
 	http.HandleFunc("/api/upload", AuthMiddleware(handleUploadFile))
+	http.HandleFunc("/api/save", AuthMiddleware(handleSaveFile)) // NEW: Text Save
 	http.HandleFunc("/api/mkdir", AuthMiddleware(handleCreateDir))
 	http.HandleFunc("/api/delete", AuthMiddleware(handleDelete))
 
