@@ -14,3 +14,13 @@ type CreateDirRequest struct {
 	Path string `json:"path"`
 	Name string `json:"name"`
 }
+
+// ActionRequest handles Move, Copy, and Rename
+// SourcePath: Where the file is now
+// DestPath: Where you want it to go (for Copy/Move)
+// NewName: The new name (for Rename)
+type ActionRequest struct {
+	SourcePath string `json:"sourcePath"`
+	DestPath   string `json:"destPath"` 
+	NewName    string `json:"newName"`
+}
