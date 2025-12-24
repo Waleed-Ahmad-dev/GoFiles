@@ -7,15 +7,17 @@ import (
 )
 
 func main() {
+	// 1. Initialize Sub-systems
 	InitTrash()
+	InitConfig() // Checks if gofiles.json exists
 
-	// --- PUBLIC ROUTES ---
+	// --- PUBLIC ROUTES (No Auth Required) ---
+	http.HandleFunc("/api/system/status", handleSystemStatus) // Checks if we need setup
+	http.HandleFunc("/api/setup", handleSetup)                // Performs the setup
 	http.HandleFunc("/api/login", handleLogin)
 	http.HandleFunc("/api/logout", handleLogout)
 
-	// --- PROTECTED ROUTES (Wrapped in AuthMiddleware) ---
-
-	// Utility to check if user is logged in
+	// --- PROTECTED ROUTES ---
 	http.HandleFunc("/api/me", AuthMiddleware(handleCheckAuth))
 
 	// Read & Search
@@ -39,6 +41,11 @@ func main() {
 	http.HandleFunc("/api/copy", AuthMiddleware(handleCopy))
 
 	fmt.Println("🚀 GoFiles Server started on http://localhost:8080")
-	fmt.Printf("🔑 Default Login: %s / %s\n", AdminUser, AdminPass)
+	if !IsConfigured {
+		fmt.Println("⚠️  SYSTEM NOT CONFIGURED. Please go to the UI to set up an admin account.")
+	} else {
+		fmt.Println("✅ System configured. Login enabled.")
+	}
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
