@@ -9,9 +9,18 @@ import (
 
 // enableCors allows your future Frontend to talk to this backend
 func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	// 1. Allow the specific origin sending the request (Dynamic Origin)
+	// This is required when withCredentials is set to true
+	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+
+	// 2. Allow credentials (cookies)
+	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
+
+	// 3. Allowed Methods
 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	// 4. Allowed Headers
+	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 }
 
 // isPathSafe ensures the user doesn't try to access protected folders
