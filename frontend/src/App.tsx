@@ -24,10 +24,6 @@ type AppState = "loading" | "setup" | "login" | "dashboard";
 function App() {
   const [view, setView] = useState<AppState>("loading");
 
-  useEffect(() => {
-    checkSystemStatus();
-  }, []);
-
   const checkSystemStatus = async () => {
     try {
       // 1. Check if system is configured (First Run?)
@@ -51,6 +47,10 @@ function App() {
       setView("login"); // Fallback
     }
   };
+
+  useEffect(() => {
+    checkSystemStatus();
+  }, []);
 
   if (view === "loading") {
     return (
