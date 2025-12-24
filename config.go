@@ -1,9 +1,23 @@
 package main
 
-import "time"
+import (
+	"os"
+	"time"
+)
 
-// Config: The root folder we are browsing
-// "." means the current folder where the program is running
+// Config
 const RootFolder = "."
 const TrashFolder = ".trash"
-const TrashRetention = 30 * 24 * time.Hour // 30 Days
+const TrashRetention = 30 * 24 * time.Hour
+
+// Auth Config (Defaults, but should be changed via Environment Variables)
+var AdminUser = getEnv("GOFILES_USER", "admin")
+var AdminPass = getEnv("GOFILES_PASS", "admin123")
+
+// Helper to get env variables
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
+}
