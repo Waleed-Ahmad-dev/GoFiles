@@ -43,3 +43,8 @@ type ArchiveRequest struct {
 	DestPath   string `json:"destPath"`   // Where to save
 	Password   string `json:"password"`   // Optional: Leave empty for no password
 }
+
+type SaveFileRequest struct {
+	Path    string `json:"path"`
+	Content string `json:"content"`
+}
