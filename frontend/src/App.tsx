@@ -4,6 +4,7 @@ import { api } from "./api";
 import Login from "./Login";
 import Setup from "./Setup";
 import { Loader2 } from "lucide-react";
+import Dashboard from "./Dashboard";
 
 // We haven't built this yet, but we will import it soon!
 // For now, we will create a placeholder below.
@@ -69,7 +70,10 @@ function App() {
     return <Login onLogin={() => setView("dashboard")} />;
   }
 
-  return <FileBrowser />;
+  if (view === "dashboard") {
+    // Pass a way to logout if needed, or just let the Dashboard handle its own refresh
+    return <Dashboard />;
+  }
 }
 
 export default App;
