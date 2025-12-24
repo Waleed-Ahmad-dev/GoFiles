@@ -1,6 +1,7 @@
 package main
 
 import "time"
+
 // FileInfo defines the JSON structure for our API
 type FileInfo struct {
 	Name    string `json:"name"`
@@ -10,24 +11,27 @@ type FileInfo struct {
 	Type    string `json:"type"`
 }
 
-// CreateDirRequest defines the JSON body for creating a folder
+// ConfigFile is what we save to disk (gofiles.json)
+type ConfigFile struct {
+	Username  string    `json:"username"`
+	Password  string    `json:"password"` // In production, we should hash this!
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// ... (Keep CreateDirRequest, ActionRequest, TrashInfo as they were) ...
 type CreateDirRequest struct {
 	Path string `json:"path"`
 	Name string `json:"name"`
 }
 
-// ActionRequest handles Move, Copy, and Rename
-// SourcePath: Where the file is now
-// DestPath: Where you want it to go (for Copy/Move)
-// NewName: The new name (for Rename)
 type ActionRequest struct {
 	SourcePath string `json:"sourcePath"`
-	DestPath   string `json:"destPath"` 
+	DestPath   string `json:"destPath"`
 	NewName    string `json:"newName"`
 }
 
 type TrashInfo struct {
 	OriginalPath string    `json:"originalPath"`
 	DeletedAt    time.Time `json:"deletedAt"`
-	Filename     string    `json:"filename"` // The unique name in trash
+	Filename     string    `json:"filename"`
 }
