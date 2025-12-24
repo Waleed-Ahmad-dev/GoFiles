@@ -134,22 +134,90 @@ func handleCreateDir(w http.ResponseWriter, r *http.Request) {
 
 func handleDelete(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
-	if r.Method != http.MethodDelete && r.Method != http.MethodPost {
-		return
-	}
+	if r.Method != http.MethodDelete && r.Method != http.MethodPost { return }
 
 	targetPath := r.URL.Query().Get("path")
-	fullPath := filepath.Join(RootFolder, targetPath)
+	permanent := r.URL.Query().Get("permanent") == "true"
 
-	if !isPathSafe(fullPath) {
+	// Security Check
+	if !isPathSafe(filepath.Join(RootFolder, targetPath)) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}
 
-	if err := os.RemoveAll(fullPath); err != nil {
-		http.Error(w, "Could not delete item", http.StatusInternalServerError)
+	// If user specifically asked for permanent delete (Shift+Delete style)
+	if permanent {
+		fullPath := filepath.Join(RootFolder, targetPath)
+		if err := os.RemoveAll(fullPath); err != nil {
+			http.Error(w, "Could not delete", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// Normal Delete -> Send to Trash
+		if err := MoveToTrash(targetPath); err != nil {
+			http.Error(w, "Could not move to trash: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// ---------------- NEW HANDLERS ----------------
+
+// handleRestore restores a file given its ID (trash filename)
+func handleRestore(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	if r.Method != http.MethodPost { return }
+
+	trashFilename := r.URL.Query().Get("name")
+	
+	// Basic security: ensure we are only touching files in .trash
+	if strings.Contains(trashFilename, "/") || strings.Contains(trashFilename, "\\") {
+		http.Error(w, "Invalid filename", http.StatusBadRequest)
 		return
 	}
+
+	if err := RestoreFromTrash(trashFilename); err != nil {
+		http.Error(w, "Restore failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// handleListTrash shows what is in the bin
+func handleListTrash(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	trashRoot := filepath.Join(RootFolder, TrashFolder)
+	
+	files, _ := ioutil.ReadDir(trashRoot)
+	
+	var trashList []TrashInfo
+
+	for _, f := range files {
+		// We only care about the .json files to build our list
+		if strings.HasSuffix(f.Name(), ".json") {
+			metaBytes, _ := ioutil.ReadFile(filepath.Join(trashRoot, f.Name()))
+			var meta TrashInfo
+			json.Unmarshal(metaBytes, &meta)
+			trashList = append(trashList, meta)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(trashList)
+}
+
+// handleEmptyTrash permanently deletes EVERYTHING in .trash
+func handleEmptyTrash(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	if r.Method != http.MethodPost && r.Method != http.MethodDelete { return }
+
+	trashRoot := filepath.Join(RootFolder, TrashFolder)
+	
+	// Delete the whole folder and recreate it
+	os.RemoveAll(trashRoot)
+	os.Mkdir(trashRoot, 0755)
+
 	w.WriteHeader(http.StatusOK)
 }
 
