@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
-import { api } from "./api";
-import Login from "./Login";
-import Setup from "./Setup";
-import Dashboard from "./Dashboard";
+import { api } from "./Utils/api";
+import Login from "./Auth/Login";
+import Setup from "./Auth/Setup";
+import Dashboard from "./Dashboard/Dashboard";
 import { Loader2 } from "lucide-react";
-import { useTheme } from "./ThemeContext";
+import { useTheme } from "./Context/ThemeContext";
 
 type AppState = "loading" | "setup" | "login" | "dashboard";
 

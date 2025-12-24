@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState, useRef } from "react";
-import { api, type FileInfo } from "./api";
+import { api, type FileInfo } from "../Utils/api";
 import FileIcon from "./FileIcon";
-import { useTheme, type AccentColor } from "./ThemeContext";
+import { useTheme, type AccentColor } from "../Context/ThemeContext";
 import {
   Search,
   Home,
