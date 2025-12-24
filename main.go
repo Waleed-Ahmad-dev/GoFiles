@@ -13,6 +13,9 @@ func main() {
 	http.HandleFunc("/api/upload", handleUploadFile)
 	http.HandleFunc("/api/mkdir", handleCreateDir)
 	http.HandleFunc("/api/delete", handleDelete)
+	http.HandleFunc("/api/rename", handleRename)
+	http.HandleFunc("/api/move", handleMove)
+	http.HandleFunc("/api/copy", handleCopy)
 
 	fmt.Println("🚀 GoFiles Server started on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
