@@ -99,9 +99,27 @@ func enableCors(w *http.ResponseWriter) {
 
 // isPathSafe ensures the user doesn't try to access protected folders
 func isPathSafe(path string) bool {
-	cleanPath := filepath.Clean(path)
-	root, _ := filepath.Abs(RootFolder)
-	// Simple check: the path must start with the root path
-	// (Note: stronger security is needed for production, but this works for local)
-	return true 
+	// Get the absolute path of the root directory
+	root, err := filepath.Abs(RootFolder)
+	if err != nil {
+		return false
+	}
+
+	// Get the absolute path of the requested file
+	target, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+
+	// Calculate the relative path from root to target
+	rel, err := filepath.Rel(root, target)
+	if err != nil {
+		return false
+	}
+
+	// If the relative path starts with "..", it means it's outside our root folder!
+	// We also check if it is the root itself (".")
+	isOutside := len(rel) >= 2 && rel[0:2] == ".." 
+	
+	return !isOutside
 }
