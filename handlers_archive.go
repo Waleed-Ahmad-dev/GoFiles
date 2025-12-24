@@ -70,7 +70,7 @@ func handleZip(w http.ResponseWriter, r *http.Request) {
 		// Make path relative to the root of the archive
 		// e.g. zipping /users/docs/work -> work/resume.pdf
 		relPath, _ := filepath.Rel(filepath.Dir(srcPath), path)
-		header.Name = strings.ToSlash(relPath)
+		header.Name = filepath.ToSlash(relPath)
 
 		if info.IsDir() {
 			header.Name += "/"
