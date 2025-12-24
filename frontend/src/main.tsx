@@ -6,7 +6,11 @@ import { ThemeProvider } from "./ThemeContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="gofiles-theme">
+    <ThemeProvider
+      defaultTheme="system"
+      defaultAccent="blue"
+      storageKey="gofiles-prefs"
+    >
       <App />
     </ThemeProvider>
   </StrictMode>
