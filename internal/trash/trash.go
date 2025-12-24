@@ -1,4 +1,4 @@
-package main
+package trash
 
 import (
 	"encoding/json"
@@ -8,12 +8,15 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"GoFiles/internal/config"
+	"GoFiles/internal/types"
 )
 
 // InitTrash creates the hidden trash folder if it doesn't exist
 // and starts the background cleanup task.
 func InitTrash() {
-	trashPath := filepath.Join(RootFolder, TrashFolder)
+	trashPath := filepath.Join(config.RootFolder, config.TrashFolder)
 	if _, err := os.Stat(trashPath); os.IsNotExist(err) {
 		os.Mkdir(trashPath, 0755)
 	}
@@ -24,8 +27,8 @@ func InitTrash() {
 
 // MoveToTrash performs a "Soft Delete"
 func MoveToTrash(relativePath string) error {
-	fullSourcePath := filepath.Join(RootFolder, relativePath)
-	trashRoot := filepath.Join(RootFolder, TrashFolder)
+	fullSourcePath := filepath.Join(config.RootFolder, relativePath)
+	trashRoot := filepath.Join(config.RootFolder, config.TrashFolder)
 
 	// 1. Generate unique name (file.txt -> file.txt_1739281)
 	info, err := os.Stat(fullSourcePath)
@@ -37,13 +40,13 @@ func MoveToTrash(relativePath string) error {
 	trashPath := filepath.Join(trashRoot, trashName)
 
 	// 2. Create Metadata File (.json)
-	meta := TrashInfo{
+	meta := types.TrashInfo{
 		OriginalPath: relativePath,
 		DeletedAt:    time.Now(),
 		Filename:     trashName,
 	}
 	metaBytes, _ := json.MarshalIndent(meta, "", "  ")
-	
+
 	// Save metadata: .trash/file.txt_1739281.json
 	err = ioutil.WriteFile(trashPath+".json", metaBytes, 0644)
 	if err != nil {
@@ -56,7 +59,7 @@ func MoveToTrash(relativePath string) error {
 
 // RestoreFromTrash moves a file back to its original location
 func RestoreFromTrash(trashFilename string) error {
-	trashRoot := filepath.Join(RootFolder, TrashFolder)
+	trashRoot := filepath.Join(config.RootFolder, config.TrashFolder)
 	trashFilePath := filepath.Join(trashRoot, trashFilename)
 	metaFilePath := trashFilePath + ".json"
 
@@ -65,11 +68,11 @@ func RestoreFromTrash(trashFilename string) error {
 	if err != nil {
 		return fmt.Errorf("metadata not found")
 	}
-	var meta TrashInfo
+	var meta types.TrashInfo
 	json.Unmarshal(metaBytes, &meta)
 
 	// 2. Check if original folder still exists
-	destPath := filepath.Join(RootFolder, meta.OriginalPath)
+	destPath := filepath.Join(config.RootFolder, meta.OriginalPath)
 	destDir := filepath.Dir(destPath)
 	if _, err := os.Stat(destDir); os.IsNotExist(err) {
 		// If original folder is gone, recreate it
@@ -91,34 +94,34 @@ func startTrashCleanup() {
 	for {
 		// Sleep first to let server start up
 		time.Sleep(1 * time.Hour)
-		
+
 		fmt.Println("🧹 Running Auto-Trash Cleanup...")
-		trashRoot := filepath.Join(RootFolder, TrashFolder)
+		trashRoot := filepath.Join(config.RootFolder, config.TrashFolder)
 		files, _ := ioutil.ReadDir(trashRoot)
 
 		for _, f := range files {
 			// specific logic: only check .json files to find age
 			if strings.HasSuffix(f.Name(), ".json") {
-				continue 
+				continue
 			}
 
 			// Check the corresponding JSON file for the date
 			metaBytes, err := ioutil.ReadFile(filepath.Join(trashRoot, f.Name()+".json"))
 			if err != nil {
 				// No metadata? Just rely on file mod time
-				if time.Since(f.ModTime()) > TrashRetention {
+				if time.Since(f.ModTime()) > config.TrashRetention {
 					os.RemoveAll(filepath.Join(trashRoot, f.Name()))
 				}
 				continue
 			}
 
-			var meta TrashInfo
+			var meta types.TrashInfo
 			json.Unmarshal(metaBytes, &meta)
 
-			if time.Since(meta.DeletedAt) > TrashRetention {
+			if time.Since(meta.DeletedAt) > config.TrashRetention {
 				fmt.Printf("🗑️ Auto-deleting old file: %s\n", f.Name())
 				// Delete File AND Metadata
-				os.RemoveAll(filepath.Join(trashRoot, f.Name()))      
+				os.RemoveAll(filepath.Join(trashRoot, f.Name()))
 				os.Remove(filepath.Join(trashRoot, f.Name()+".json"))
 			}
 		}

@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -9,32 +9,36 @@ import (
 	"path/filepath"
 	"strings"
 
+	"GoFiles/internal/config"
+	"GoFiles/internal/types"
+	"GoFiles/internal/utils"
+
 	"github.com/yeka/zip" // Replaces standard archive/zip
 )
 
-// handleZip compresses a file or folder into a .zip
-func handleZip(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+// HandleZip compresses a file or folder into a .zip
+func HandleZip(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodPost {
 		return
 	}
 
-	var req ArchiveRequest
+	var req types.ArchiveRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	srcPath := filepath.Join(RootFolder, req.SourcePath)
+	srcPath := filepath.Join(config.RootFolder, req.SourcePath)
 	// Destination: If DestPath is empty, save next to source
 	destPath := ""
 	if req.DestPath != "" {
-		destPath = filepath.Join(RootFolder, req.DestPath)
+		destPath = filepath.Join(config.RootFolder, req.DestPath)
 	} else {
 		destPath = srcPath + ".zip"
 	}
 
-	if !isPathSafe(srcPath) || !isPathSafe(destPath) {
+	if !utils.IsPathSafe(srcPath) || !utils.IsPathSafe(destPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}
@@ -113,23 +117,23 @@ func handleZip(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// handleUnzip extracts a zip file
-func handleUnzip(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+// HandleUnzip extracts a zip file
+func HandleUnzip(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodPost {
 		return
 	}
 
-	var req ArchiveRequest
+	var req types.ArchiveRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	srcPath := filepath.Join(RootFolder, req.SourcePath)
-	destPath := filepath.Join(RootFolder, req.DestPath)
+	srcPath := filepath.Join(config.RootFolder, req.SourcePath)
+	destPath := filepath.Join(config.RootFolder, req.DestPath)
 
-	if !isPathSafe(srcPath) || !isPathSafe(destPath) {
+	if !utils.IsPathSafe(srcPath) || !utils.IsPathSafe(destPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}
@@ -200,16 +204,16 @@ func handleUnzip(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleDownloadZip(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+func HandleDownloadZip(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodGet {
 		return
 	}
 
 	reqPath := r.URL.Query().Get("path")
-	fullPath := filepath.Join(RootFolder, reqPath)
+	fullPath := filepath.Join(config.RootFolder, reqPath)
 
-	if !isPathSafe(fullPath) {
+	if !utils.IsPathSafe(fullPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}

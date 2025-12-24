@@ -6,56 +6,61 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"GoFiles/internal/auth"
+	"GoFiles/internal/config"
+	"GoFiles/internal/handlers"
+	"GoFiles/internal/trash"
 )
 
 func main() {
 	// 1. Initialize Sub-systems
-	InitTrash()
-	InitConfig()
+	trash.InitTrash()
+	config.InitConfig()
 
 	// Ensure Thumbs folder exists
-	os.MkdirAll(filepath.Join(RootFolder, ThumbsFolder), 0755)
+	os.MkdirAll(filepath.Join(config.RootFolder, config.ThumbsFolder), 0755)
 
 	// --- PUBLIC ROUTES ---
-	http.HandleFunc("/api/system/status", handleSystemStatus)
-	http.HandleFunc("/api/setup", handleSetup)
-	http.HandleFunc("/api/login", handleLogin)
-	http.HandleFunc("/api/logout", handleLogout)
+	http.HandleFunc("/api/system/status", auth.HandleSystemStatus)
+	http.HandleFunc("/api/setup", auth.HandleSetup)
+	http.HandleFunc("/api/login", auth.HandleLogin)
+	http.HandleFunc("/api/logout", auth.HandleLogout)
 
 	// --- PROTECTED ROUTES ---
-	http.HandleFunc("/api/me", AuthMiddleware(handleCheckAuth))
+	http.HandleFunc("/api/me", auth.AuthMiddleware(auth.HandleCheckAuth))
 
 	// Media
-	http.HandleFunc("/api/thumbnail", AuthMiddleware(handleThumbnail))
+	http.HandleFunc("/api/thumbnail", auth.AuthMiddleware(handlers.HandleThumbnail))
 
 	// Read & Search
-	http.HandleFunc("/api/files", AuthMiddleware(handleListFiles))
-	http.HandleFunc("/api/download", AuthMiddleware(handleDownloadFile))
-	http.HandleFunc("/api/download-zip", AuthMiddleware(handleDownloadZip)) // NEW: Stream Zip
-	http.HandleFunc("/api/search", AuthMiddleware(handleSearch))
+	http.HandleFunc("/api/files", auth.AuthMiddleware(handlers.HandleListFiles))
+	http.HandleFunc("/api/download", auth.AuthMiddleware(handlers.HandleDownloadFile))
+	http.HandleFunc("/api/download-zip", auth.AuthMiddleware(handlers.HandleDownloadZip)) // NEW: Stream Zip
+	http.HandleFunc("/api/search", auth.AuthMiddleware(handlers.HandleSearch))
 
 	// Zip / Unzip
-	http.HandleFunc("/api/zip", AuthMiddleware(handleZip))
-	http.HandleFunc("/api/unzip", AuthMiddleware(handleUnzip))
+	http.HandleFunc("/api/zip", auth.AuthMiddleware(handlers.HandleZip))
+	http.HandleFunc("/api/unzip", auth.AuthMiddleware(handlers.HandleUnzip))
 
 	// Trash
-	http.HandleFunc("/api/trash/list", AuthMiddleware(handleListTrash))
-	http.HandleFunc("/api/trash/restore", AuthMiddleware(handleRestore))
-	http.HandleFunc("/api/trash/empty", AuthMiddleware(handleEmptyTrash))
+	http.HandleFunc("/api/trash/list", auth.AuthMiddleware(handlers.HandleListTrash))
+	http.HandleFunc("/api/trash/restore", auth.AuthMiddleware(handlers.HandleRestore))
+	http.HandleFunc("/api/trash/empty", auth.AuthMiddleware(handlers.HandleEmptyTrash))
 
 	// Write
-	http.HandleFunc("/api/upload", AuthMiddleware(handleUploadFile))
-	http.HandleFunc("/api/save", AuthMiddleware(handleSaveFile)) // NEW: Text Save
-	http.HandleFunc("/api/mkdir", AuthMiddleware(handleCreateDir))
-	http.HandleFunc("/api/delete", AuthMiddleware(handleDelete))
+	http.HandleFunc("/api/upload", auth.AuthMiddleware(handlers.HandleUploadFile))
+	http.HandleFunc("/api/save", auth.AuthMiddleware(handlers.HandleSaveFile)) // NEW: Text Save
+	http.HandleFunc("/api/mkdir", auth.AuthMiddleware(handlers.HandleCreateDir))
+	http.HandleFunc("/api/delete", auth.AuthMiddleware(handlers.HandleDelete))
 
 	// Organize
-	http.HandleFunc("/api/rename", AuthMiddleware(handleRename))
-	http.HandleFunc("/api/move", AuthMiddleware(handleMove))
-	http.HandleFunc("/api/copy", AuthMiddleware(handleCopy))
+	http.HandleFunc("/api/rename", auth.AuthMiddleware(handlers.HandleRename))
+	http.HandleFunc("/api/move", auth.AuthMiddleware(handlers.HandleMove))
+	http.HandleFunc("/api/copy", auth.AuthMiddleware(handlers.HandleCopy))
 
 	fmt.Println("🚀 GoFiles Server started on http://localhost:8080")
-	if !IsConfigured {
+	if !config.IsConfigured {
 		fmt.Println("⚠️  SYSTEM NOT CONFIGURED. Go to http://localhost:8080 to set up.")
 	} else {
 		fmt.Println("✅ System configured.")

@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -7,19 +7,23 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"GoFiles/internal/config"
+	"GoFiles/internal/types"
+	"GoFiles/internal/utils"
 )
 
-func handleUploadFile(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+func HandleUploadFile(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodPost {
 		return
 	}
 
 	r.ParseMultipartForm(10 << 20)
 	targetDir := r.URL.Query().Get("path")
-	fullDirPath := filepath.Join(RootFolder, targetDir)
+	fullDirPath := filepath.Join(config.RootFolder, targetDir)
 
-	if !isPathSafe(fullDirPath) {
+	if !utils.IsPathSafe(fullDirPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}
@@ -41,38 +45,38 @@ func handleUploadFile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleCreateDir(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+func HandleCreateDir(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodPost {
 		return
 	}
 
-	var req CreateDirRequest
+	var req types.CreateDirRequest
 	json.NewDecoder(r.Body).Decode(&req)
-	fullPath := filepath.Join(RootFolder, req.Path, req.Name)
+	fullPath := filepath.Join(config.RootFolder, req.Path, req.Name)
 
-	if !isPathSafe(fullPath) {
+	if !utils.IsPathSafe(fullPath) {
 		return
 	}
 	os.Mkdir(fullPath, 0755)
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleSaveFile(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+func HandleSaveFile(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodPost {
 		return
 	}
 
-	var req SaveFileRequest
+	var req types.SaveFileRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	fullPath := filepath.Join(RootFolder, req.Path)
+	fullPath := filepath.Join(config.RootFolder, req.Path)
 
-	if !isPathSafe(fullPath) {
+	if !utils.IsPathSafe(fullPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}

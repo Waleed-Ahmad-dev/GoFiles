@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"bufio"
@@ -12,20 +12,24 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"GoFiles/internal/config"
+	"GoFiles/internal/types"
+	"GoFiles/internal/utils"
 )
 
-// handleListFiles displays files in a folder, with optional filtering
-func handleListFiles(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+// HandleListFiles displays files in a folder, with optional filtering
+func HandleListFiles(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	reqPath := r.URL.Query().Get("path")
-	fullPath := filepath.Join(RootFolder, reqPath)
+	fullPath := filepath.Join(config.RootFolder, reqPath)
 
-	if !isPathSafe(fullPath) {
+	if !utils.IsPathSafe(fullPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}
@@ -45,7 +49,7 @@ func handleListFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fileList []FileInfo
+	var fileList []types.FileInfo
 	for _, f := range files {
 		info, _ := f.Info()
 
@@ -57,7 +61,7 @@ func handleListFiles(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		fileList = append(fileList, FileInfo{
+		fileList = append(fileList, types.FileInfo{
 			Name:    f.Name(),
 			Size:    info.Size(),
 			IsDir:   f.IsDir(),
@@ -70,9 +74,9 @@ func handleListFiles(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(fileList)
 }
 
-// handleSearch performs recursive search for Name or Content
-func handleSearch(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+// HandleSearch performs recursive search for Name or Content
+func HandleSearch(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodGet {
 		return
 	}
@@ -86,13 +90,13 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fullStartPath := filepath.Join(RootFolder, startPath)
-	if !isPathSafe(fullStartPath) {
+	fullStartPath := filepath.Join(config.RootFolder, startPath)
+	if !utils.IsPathSafe(fullStartPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}
 
-	var results []FileInfo
+	var results []types.FileInfo
 
 	err := filepath.WalkDir(fullStartPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -108,7 +112,7 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 		if searchType == "name" {
 			if strings.Contains(strings.ToLower(d.Name()), query) {
 				info, _ := d.Info()
-				results = append(results, FileInfo{
+				results = append(results, types.FileInfo{
 					Name:    relPath,
 					Size:    info.Size(),
 					IsDir:   d.IsDir(),
@@ -130,7 +134,7 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 				scanner := bufio.NewScanner(file)
 				for scanner.Scan() {
 					if strings.Contains(strings.ToLower(scanner.Text()), query) {
-						results = append(results, FileInfo{
+						results = append(results, types.FileInfo{
 							Name:    relPath,
 							Size:    info.Size(),
 							IsDir:   false,
@@ -158,16 +162,16 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-func handleDownloadFile(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+func HandleDownloadFile(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodGet {
 		return
 	}
 
 	reqPath := r.URL.Query().Get("path")
-	fullPath := filepath.Join(RootFolder, reqPath)
+	fullPath := filepath.Join(config.RootFolder, reqPath)
 
-	if !isPathSafe(fullPath) {
+	if !utils.IsPathSafe(fullPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}

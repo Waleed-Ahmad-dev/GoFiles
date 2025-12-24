@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -7,19 +7,24 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"GoFiles/internal/config"
+	"GoFiles/internal/trash"
+	"GoFiles/internal/types"
+	"GoFiles/internal/utils"
 )
 
-func handleListTrash(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	trashRoot := filepath.Join(RootFolder, TrashFolder)
+func HandleListTrash(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
+	trashRoot := filepath.Join(config.RootFolder, config.TrashFolder)
 
 	files, _ := ioutil.ReadDir(trashRoot)
 
-	var trashList []TrashInfo
+	var trashList []types.TrashInfo
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".json") {
 			metaBytes, _ := ioutil.ReadFile(filepath.Join(trashRoot, f.Name()))
-			var meta TrashInfo
+			var meta types.TrashInfo
 			json.Unmarshal(metaBytes, &meta)
 			trashList = append(trashList, meta)
 		}
@@ -29,8 +34,8 @@ func handleListTrash(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(trashList)
 }
 
-func handleRestore(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+func HandleRestore(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodPost {
 		return
 	}
@@ -42,17 +47,17 @@ func handleRestore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RestoreFromTrash(trashFilename)
+	trash.RestoreFromTrash(trashFilename)
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleEmptyTrash(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+func HandleEmptyTrash(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodPost {
 		return
 	}
 
-	os.RemoveAll(filepath.Join(RootFolder, TrashFolder))
-	os.Mkdir(filepath.Join(RootFolder, TrashFolder), 0755)
+	os.RemoveAll(filepath.Join(config.RootFolder, config.TrashFolder))
+	os.Mkdir(filepath.Join(config.RootFolder, config.TrashFolder), 0755)
 	w.WriteHeader(http.StatusOK)
 }
