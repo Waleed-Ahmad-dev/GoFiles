@@ -1,14 +1,16 @@
-package main
+package utils
 
 import (
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"GoFiles/internal/config"
 )
 
-// enableCors allows your future Frontend to talk to this backend
-func enableCors(w *http.ResponseWriter) {
+// EnableCors allows your future Frontend to talk to this backend
+func EnableCors(w *http.ResponseWriter) {
 	// 1. Allow the specific origin sending the request (Dynamic Origin)
 	// This is required when withCredentials is set to true
 	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
@@ -23,9 +25,9 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 }
 
-// isPathSafe ensures the user doesn't try to access protected folders
-func isPathSafe(path string) bool {
-	root, err := filepath.Abs(RootFolder)
+// IsPathSafe ensures the user doesn't try to access protected folders
+func IsPathSafe(path string) bool {
+	root, err := filepath.Abs(config.RootFolder)
 	if err != nil {
 		return false
 	}
@@ -39,7 +41,6 @@ func isPathSafe(path string) bool {
 	}
 	isOutside := len(rel) >= 2 && rel[0:2] == ".."
 	return !isOutside
-
 }
 
 func CopyFile(src, dst string) error {

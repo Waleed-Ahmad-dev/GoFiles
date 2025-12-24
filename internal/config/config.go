@@ -1,9 +1,11 @@
-package main
+package config
 
 import (
 	"encoding/json"
 	"os"
 	"time"
+
+	"GoFiles/internal/types"
 )
 
 // Global Config
@@ -14,12 +16,11 @@ const TrashRetention = 30 * 24 * time.Hour
 const ConfigFileName = "gofiles.json"
 
 // Runtime State
-var AppConfig ConfigFile
+var AppConfig types.ConfigFile
 var IsConfigured = false
 
 // InitConfig tries to load gofiles.json
 func InitConfig() {
-	// ... (Keep existing logic) ...
 	file, err := os.Open(ConfigFileName)
 	if err != nil {
 		IsConfigured = false
@@ -30,9 +31,9 @@ func InitConfig() {
 	IsConfigured = true
 }
 
-// ... (Keep SaveConfig and getEnv) ...
+// SaveConfig saves the configuration to gofiles.json
 func SaveConfig(username, password string) error {
-	AppConfig = ConfigFile{Username: username, Password: password, CreatedAt: time.Now()}
+	AppConfig = types.ConfigFile{Username: username, Password: password, CreatedAt: time.Now()}
 	file, err := os.Create(ConfigFileName)
 	if err != nil {
 		return err
@@ -43,8 +44,8 @@ func SaveConfig(username, password string) error {
 	return encoder.Encode(AppConfig)
 }
 
-// Helper to get env variables
-func getEnv(key, fallback string) string {
+// GetEnv helper to get env variables
+func GetEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}

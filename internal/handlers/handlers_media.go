@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"crypto/md5"
@@ -9,20 +9,23 @@ import (
 	"path/filepath"
 	"strings"
 
+	"GoFiles/internal/config"
+	"GoFiles/internal/utils"
+
 	"github.com/disintegration/imaging"
 )
 
-// handleThumbnail generates or retrieves a cached thumbnail
-func handleThumbnail(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+// HandleThumbnail generates or retrieves a cached thumbnail
+func HandleThumbnail(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCors(&w)
 	if r.Method != http.MethodGet {
 		return
 	}
 
 	reqPath := r.URL.Query().Get("path")
-	fullPath := filepath.Join(RootFolder, reqPath)
+	fullPath := filepath.Join(config.RootFolder, reqPath)
 
-	if !isPathSafe(fullPath) {
+	if !utils.IsPathSafe(fullPath) {
 		http.Error(w, "Access Denied", http.StatusForbidden)
 		return
 	}
@@ -49,7 +52,7 @@ func handleThumbnail(w http.ResponseWriter, r *http.Request) {
 	hash := hex.EncodeToString(hasher.Sum(nil))
 
 	thumbFilename := hash + ".jpg"
-	thumbPath := filepath.Join(RootFolder, ThumbsFolder, thumbFilename)
+	thumbPath := filepath.Join(config.RootFolder, config.ThumbsFolder, thumbFilename)
 
 	// 4. Check if Thumbnail already exists on disk
 	if _, err := os.Stat(thumbPath); err == nil {
@@ -60,7 +63,7 @@ func handleThumbnail(w http.ResponseWriter, r *http.Request) {
 
 	// 5. MISS! Generate it.
 	// Ensure .thumbs folder exists
-	os.MkdirAll(filepath.Join(RootFolder, ThumbsFolder), 0755)
+	os.MkdirAll(filepath.Join(config.RootFolder, config.ThumbsFolder), 0755)
 
 	// Open and Resize
 	// imaging.Open handles rotation automatically (EXIF data)
