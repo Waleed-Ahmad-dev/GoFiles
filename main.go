@@ -25,13 +25,17 @@ func main() {
 	// --- PROTECTED ROUTES ---
 	http.HandleFunc("/api/me", AuthMiddleware(handleCheckAuth))
 
-	// Media (NEW)
+	// Media
 	http.HandleFunc("/api/thumbnail", AuthMiddleware(handleThumbnail))
 
 	// Read & Search
 	http.HandleFunc("/api/files", AuthMiddleware(handleListFiles))
 	http.HandleFunc("/api/download", AuthMiddleware(handleDownloadFile))
 	http.HandleFunc("/api/search", AuthMiddleware(handleSearch))
+
+	// Zip / Unzip (NEW)
+	http.HandleFunc("/api/zip", AuthMiddleware(handleZip))
+	http.HandleFunc("/api/unzip", AuthMiddleware(handleUnzip))
 
 	// Trash
 	http.HandleFunc("/api/trash/list", AuthMiddleware(handleListTrash))
