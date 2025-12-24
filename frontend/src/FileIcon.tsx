@@ -20,8 +20,10 @@ export default function FileIcon({
   name,
   className = "w-6 h-6",
 }: FileIconProps) {
+  // Folders inherit the accent color from the parent component or default to blue
+  // We use a specific utility here to make folders look distinct
   if (isDir)
-    return <Folder className={`${className} text-blue-400 fill-blue-400/20`} />;
+    return <Folder className={`${className} text-sky-500 fill-sky-500/20`} />;
 
   const ext = name.split(".").pop()?.toLowerCase();
 
@@ -31,20 +33,23 @@ export default function FileIcon({
     case "png":
     case "gif":
     case "webp":
-      return <ImageIcon className={`${className} text-purple-400`} />;
+    case "svg":
+      return <ImageIcon className={`${className} text-violet-500`} />;
     case "mp4":
     case "mkv":
     case "mov":
-      return <Video className={`${className} text-red-400`} />;
+    case "avi":
+      return <Video className={`${className} text-rose-500`} />;
     case "mp3":
     case "wav":
-      return <Music className={`${className} text-pink-400`} />;
+    case "ogg":
+      return <Music className={`${className} text-pink-500`} />;
     case "zip":
     case "rar":
     case "7z":
     case "tar":
     case "gz":
-      return <Archive className={`${className} text-yellow-400`} />;
+      return <Archive className={`${className} text-amber-500`} />;
     case "js":
     case "ts":
     case "tsx":
@@ -54,11 +59,14 @@ export default function FileIcon({
     case "html":
     case "css":
     case "json":
-      return <Code className={`${className} text-green-400`} />;
+      return <Code className={`${className} text-emerald-500`} />;
     case "txt":
     case "md":
-      return <FileText className={`${className} text-gray-400`} />;
+    case "pdf":
+    case "doc":
+    case "docx":
+      return <FileText className={`${className} text-slate-500`} />;
     default:
-      return <File className={`${className} text-gray-500`} />;
+      return <File className={`${className} text-gray-400`} />;
   }
 }
