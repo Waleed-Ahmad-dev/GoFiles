@@ -6,21 +6,6 @@ import Setup from "./Setup";
 import { Loader2 } from "lucide-react";
 import Dashboard from "./Dashboard";
 
-// We haven't built this yet, but we will import it soon!
-// For now, we will create a placeholder below.
-const FileBrowser = () => (
-  <div className="min-h-screen bg-gray-950 text-white p-10">
-    <h1 className="text-3xl font-bold">📂 Dashboard Unlocked!</h1>
-    <p className="mt-4 text-gray-400">File Browser Component coming next...</p>
-    <button
-      onClick={() => window.location.reload()}
-      className="mt-8 px-4 py-2 bg-red-600 rounded"
-    >
-      Log Out (Reload)
-    </button>
-  </div>
-);
-
 type AppState = "loading" | "setup" | "login" | "dashboard";
 
 function App() {
