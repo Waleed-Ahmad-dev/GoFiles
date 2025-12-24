@@ -1,5 +1,6 @@
 package main
 
+import "time"
 // FileInfo defines the JSON structure for our API
 type FileInfo struct {
 	Name    string `json:"name"`
@@ -23,4 +24,10 @@ type ActionRequest struct {
 	SourcePath string `json:"sourcePath"`
 	DestPath   string `json:"destPath"` 
 	NewName    string `json:"newName"`
+}
+
+type TrashInfo struct {
+	OriginalPath string    `json:"originalPath"`
+	DeletedAt    time.Time `json:"deletedAt"`
+	Filename     string    `json:"filename"` // The unique name in trash
 }
