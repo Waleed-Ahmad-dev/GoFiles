@@ -37,7 +37,7 @@
 1.  Clone the repository:
 
     ```bash
-    git clone https://github.com/yourusername/GoFiles.git
+    git clone https://github.com/Waleed-Ahmad-dev/GoFiles.git
     cd GoFiles
     ```
 
