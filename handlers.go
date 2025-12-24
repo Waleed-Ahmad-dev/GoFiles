@@ -152,3 +152,93 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+func handleRename(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	if r.Method != http.MethodPost { return }
+
+	var req ActionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	oldPath := filepath.Join(RootFolder, req.SourcePath)
+	// New path is just the directory of the old path + the new name
+	newPath := filepath.Join(filepath.Dir(oldPath), req.NewName)
+
+	if !isPathSafe(oldPath) || !isPathSafe(newPath) {
+		http.Error(w, "Access Denied", http.StatusForbidden)
+		return
+	}
+
+	if err := os.Rename(oldPath, newPath); err != nil {
+		http.Error(w, "Could not rename file", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func handleMove(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	if r.Method != http.MethodPost { return }
+
+	var req ActionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	srcPath := filepath.Join(RootFolder, req.SourcePath)
+	destPath := filepath.Join(RootFolder, req.DestPath, filepath.Base(req.SourcePath))
+
+	if !isPathSafe(srcPath) || !isPathSafe(destPath) {
+		http.Error(w, "Access Denied", http.StatusForbidden)
+		return
+	}
+
+	// os.Rename moves files (and is very fast)
+	if err := os.Rename(srcPath, destPath); err != nil {
+		http.Error(w, "Could not move file", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func handleCopy(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	if r.Method != http.MethodPost { return }
+
+	var req ActionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	srcPath := filepath.Join(RootFolder, req.SourcePath)
+	destPath := filepath.Join(RootFolder, req.DestPath, filepath.Base(req.SourcePath))
+
+	if !isPathSafe(srcPath) || !isPathSafe(destPath) {
+		http.Error(w, "Access Denied", http.StatusForbidden)
+		return
+	}
+
+	// Check if source is a file or directory
+	info, err := os.Stat(srcPath)
+	if err != nil {
+		http.Error(w, "Source not found", http.StatusNotFound)
+		return
+	}
+
+	if info.IsDir() {
+		err = CopyDir(srcPath, destPath)
+	} else {
+		err = CopyFile(srcPath, destPath)
+	}
+
+	if err != nil {
+		http.Error(w, "Error copying: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
