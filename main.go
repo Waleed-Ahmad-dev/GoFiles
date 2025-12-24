@@ -7,22 +7,23 @@ import (
 )
 
 func main() {
-	// Initialize Trash (Creates folder + Starts Auto-Cleanup Timer)
+	// Initialize Trash
 	InitTrash()
 
-	// Read
+	// Read & Search
 	http.HandleFunc("/api/files", handleListFiles)
 	http.HandleFunc("/api/download", handleDownloadFile)
-	http.HandleFunc("/api/trash/list", handleListTrash) // NEW
+	http.HandleFunc("/api/search", handleSearch) // NEW: Search Endpoint
+
+	// Trash
+	http.HandleFunc("/api/trash/list", handleListTrash)
+	http.HandleFunc("/api/trash/restore", handleRestore)
+	http.HandleFunc("/api/trash/empty", handleEmptyTrash)
 
 	// Write
 	http.HandleFunc("/api/upload", handleUploadFile)
 	http.HandleFunc("/api/mkdir", handleCreateDir)
-
-	// Delete & Restore
-	http.HandleFunc("/api/delete", handleDelete)          // Modified (Soft delete)
-	http.HandleFunc("/api/trash/restore", handleRestore)  // NEW
-	http.HandleFunc("/api/trash/empty", handleEmptyTrash) // NEW
+	http.HandleFunc("/api/delete", handleDelete)
 
 	// Organize
 	http.HandleFunc("/api/rename", handleRename)
