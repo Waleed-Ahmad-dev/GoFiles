@@ -4,21 +4,29 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func main() {
 	// 1. Initialize Sub-systems
 	InitTrash()
-	InitConfig() // Checks if gofiles.json exists
+	InitConfig()
 
-	// --- PUBLIC ROUTES (No Auth Required) ---
-	http.HandleFunc("/api/system/status", handleSystemStatus) // Checks if we need setup
-	http.HandleFunc("/api/setup", handleSetup)                // Performs the setup
+	// Ensure Thumbs folder exists
+	os.MkdirAll(filepath.Join(RootFolder, ThumbsFolder), 0755)
+
+	// --- PUBLIC ROUTES ---
+	http.HandleFunc("/api/system/status", handleSystemStatus)
+	http.HandleFunc("/api/setup", handleSetup)
 	http.HandleFunc("/api/login", handleLogin)
 	http.HandleFunc("/api/logout", handleLogout)
 
 	// --- PROTECTED ROUTES ---
 	http.HandleFunc("/api/me", AuthMiddleware(handleCheckAuth))
+
+	// Media (NEW)
+	http.HandleFunc("/api/thumbnail", AuthMiddleware(handleThumbnail))
 
 	// Read & Search
 	http.HandleFunc("/api/files", AuthMiddleware(handleListFiles))
@@ -42,9 +50,9 @@ func main() {
 
 	fmt.Println("🚀 GoFiles Server started on http://localhost:8080")
 	if !IsConfigured {
-		fmt.Println("⚠️  SYSTEM NOT CONFIGURED. Please go to the UI to set up an admin account.")
+		fmt.Println("⚠️  SYSTEM NOT CONFIGURED. Go to http://localhost:8080 to set up.")
 	} else {
-		fmt.Println("✅ System configured. Login enabled.")
+		fmt.Println("✅ System configured.")
 	}
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
