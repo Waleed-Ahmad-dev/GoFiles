@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -197,4 +198,60 @@ func handleUnzip(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func handleDownloadZip(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	if r.Method != http.MethodGet {
+		return
+	}
+
+	reqPath := r.URL.Query().Get("path")
+	fullPath := filepath.Join(RootFolder, reqPath)
+
+	if !isPathSafe(fullPath) {
+		http.Error(w, "Access Denied", http.StatusForbidden)
+		return
+	}
+
+	// 1. Set Headers for Download
+	zipName := filepath.Base(fullPath) + ".zip"
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, zipName))
+
+	// 2. Initialize Zip Writer wrapping the HTTP Response
+	zipWriter := zip.NewWriter(w)
+	defer zipWriter.Close()
+
+	// 3. Walk and Stream
+	filepath.Walk(fullPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+
+		// Calculate relative path
+		relPath, _ := filepath.Rel(filepath.Dir(fullPath), path)
+		header, _ := zip.FileInfoHeader(info)
+		header.Name = filepath.ToSlash(relPath)
+
+		if info.IsDir() {
+			header.Name += "/"
+		} else {
+			header.Method = zip.Deflate
+		}
+
+		writer, _ := zipWriter.CreateHeader(header)
+		if info.IsDir() {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return nil
+		}
+		defer file.Close()
+
+		io.Copy(writer, file) // Stream file -> Zip -> Browser
+		return nil
+	})
 }
